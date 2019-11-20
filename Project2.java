@@ -34,6 +34,7 @@ public class Project2 extends JPanel{
     public static class Grid extends JPanel{
         private boolean phase2;
         private int[][] squares = new int[GRIDSIZE][GRIDSIZE];
+        private int[][] firstVisited = new int[GRIDSIZE][GRIDSIZE];
         private Color currentColor = Color.BLACK;
         private int currentXPosition;
         private int currentYPosition;
@@ -72,21 +73,48 @@ public class Project2 extends JPanel{
  
         public void drawSquare(Graphics g, int xposition, int yposition){
                 System.out.println("Into drawSquare with id " + currentID);
-                if (currentID == 0)
-                    g.setColor(Color.BLUE);
-                if (currentID == 1)
-                    g.setColor(Color.GREEN);
-                if (currentID == 2)
-                    g.setColor(Color.YELLOW);
-                if (currentID == 3)
-                    g.setColor(Color.RED);
-                g.fillRect(50 + 50*xposition, 50 + 50*yposition,50, 50);
+                g.setColor(Color.RED);
+                for (int i = 0; i < GRIDSIZE; i++)
+                {
+                    for (int j = 0; j < GRIDSIZE; j++)
+                    {
+                        if(squares[i][j] == 1)
+                        {
+                            if (firstVisited[i][j] == 0)
+                                g.setColor(Color.RED);
+                            if (firstVisited[i][j] == 1)
+                                g.setColor(Color.GREEN);
+                            if (firstVisited[i][j] == 2)
+                                g.setColor(Color.BLUE);
+                            if (firstVisited[i][j] == 3)
+                                g.setColor(Color.YELLOW);
+                        g.fillRect(50 + 50*i, 50 + 50*j, 50, 50);
+                        }  
+                        if(squares[i][j] == 2 || squares[i][j] == 3)
+                        {
+                            g.setColor(Color.WHITE);
+                            g.fillRect(50 + 50*i, 50 + 50*j, 50, 50);
+                        }
+                        if(squares[i][j] == 4)
+                        {
+                            g.setColor(Color.BLACK);
+                            g.fillRect(50 + 50*i, 50 + 50*j, 50, 50);
+                        }
+
+                    }
+                }
         }
 
-        public synchronized void report(int id, int xposition, int yposition){
+        public synchronized void report(int id, int xposition, int yposition, int alreadyVisited){
             currentXPosition = xposition;
             currentYPosition = yposition;
             currentID = id;
+            if (squares[xposition][yposition] == 0)
+            {
+                firstVisited[xposition][yposition] = id;
+            }
+            if (alreadyVisited == 0)
+                squares[xposition][yposition] += 1;
             System.out.println("X Position: " + xposition);
             System.out.println("Y Position: " + yposition);
             System.out.println("In report with id " + id);
@@ -182,8 +210,8 @@ public class Project2 extends JPanel{
             System.out.println("Thread " + id + " is running with xposition " + xposition + " and y position " + yposition);
             while(!done)
             {
+                grd.report(id, xposition, yposition, visitedSquares[xposition][yposition]);
                 visitedSquares[xposition][yposition] = 1;
-                grd.report(id, xposition, yposition);
                 this.randomMove();
                 if (visitedSquares[xposition][yposition] == 0)
                     score++;
