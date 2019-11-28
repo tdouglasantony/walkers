@@ -34,25 +34,37 @@ public class Project2 extends JPanel{
     public static class Grid extends JPanel{
         private boolean phase2;
         private int[][] squares = new int[GRIDSIZE][GRIDSIZE];
+        private int[][] phase2squares = new int[GRIDSIZE][GRIDSIZE];
         private int[][] firstVisited = new int[GRIDSIZE][GRIDSIZE];
+        private int[] finishedThreads = new int[4];
         private Color currentColor = Color.BLACK;
+        boolean winnerFound;
         private int currentXPosition;
         private int currentYPosition;
+        private int winningID;
+        private int numFinished;
         private int currentID;
         public Grid(){
             JFrame frame = new JFrame();
-            this.setPreferredSize(new Dimension(700,700));
+            this.setPreferredSize(new Dimension(900,700));
             frame.setContentPane (this);
-            frame.setSize(700, 700);
+            frame.setSize(900, 700);
             frame.setVisible(true);    
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             phase2 = false;
+            winnerFound = false;
+            numFinished = 0;
             for (int i = 0; i < GRIDSIZE; i++)
             {
                 for (int j = 0; j < GRIDSIZE; j++)
                 {
                     squares[i][j] = 0;
+                    phase2squares[i][j] = 0;
                 }
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                finishedThreads[i] = 0;
             }
         }    
 
@@ -68,11 +80,45 @@ public class Project2 extends JPanel{
                 g.drawRect(50 + 50*i, 50 + 50*j, 50, 50);
                 }
             }
-            drawSquare(g,currentXPosition,currentYPosition);
+            if (!phase2)
+            {
+                drawSquare(g,currentXPosition,currentYPosition);
+            }
+            else
+            {
+                drawPhase2(g);;
+            }
         }
  
         public void drawSquare(Graphics g, int xposition, int yposition){
                 System.out.println("Into drawSquare with id " + currentID);
+                g.setColor(Color.BLACK);
+                if (winnerFound == true)
+                {
+                    Font font = new Font("Verdana", Font.BOLD, 12);
+                    g.setFont(font);
+                    if (winningID == 0)
+                    {
+                        g.setColor(Color.RED);
+                        g.drawString("RED WINS", 650, 270);
+                    }
+                    if (winningID == 1)
+                    {
+                        g.setColor(Color.GREEN);
+                        g.drawString("GREEN WINS", 650, 270);
+                    }
+                    if (winningID == 2)
+                    {
+                        g.setColor(Color.BLUE);
+                        g.drawString("BLUE WINS", 650, 270);
+                    }
+                    if (winningID == 3)
+                    {
+                        g.setColor(Color.YELLOW);
+                        g.drawString("YELLOW WINS", 650, 270);
+                    }
+
+                }
                 g.setColor(Color.RED);
                 for (int i = 0; i < GRIDSIZE; i++)
                 {
@@ -105,21 +151,90 @@ public class Project2 extends JPanel{
                 }
         }
 
+        public void drawPhase2(Graphics g)
+        {
+            if (winningID == 0)
+            {
+                g.setColor(Color.RED);
+                g.drawString("RED WINS", 650, 270);
+            }
+            if (winningID == 1)
+            {
+                g.setColor(Color.GREEN);
+                g.drawString("GREEN WINS", 650, 270);
+            }
+            if (winningID == 2)
+            {
+                g.setColor(Color.BLUE);
+                g.drawString("BLUE WINS", 650, 270);
+            }
+            if (winningID == 3)
+            {
+                g.setColor(Color.YELLOW);
+                g.drawString("YELLOW WINS", 650, 270);
+            }
+            for (int i = 0; i < GRIDSIZE; i++)
+            {
+                for (int j = 0; j < GRIDSIZE; j++)
+                {
+                    if (phase2squares[i][j] == 1)
+                        g.fillRect(50 + 50*i, 50 + 50*j, 50, 50);
+                }
+            }
+        }
+
         public synchronized void report(int id, int xposition, int yposition, int alreadyVisited){
             currentXPosition = xposition;
             currentYPosition = yposition;
             currentID = id;
-            if (squares[xposition][yposition] == 0)
+            if (!phase2)
             {
-                firstVisited[xposition][yposition] = id;
+                if (squares[xposition][yposition] == 0)
+                {
+                    firstVisited[xposition][yposition] = id;
+                }
+                if (alreadyVisited == 0)
+                    squares[xposition][yposition] += 1;
             }
-            if (alreadyVisited == 0)
-                squares[xposition][yposition] += 1;
+            else
+            {
+                if (alreadyVisited == 0)
+                    phase2squares[xposition][yposition] += 1;
+            }
             System.out.println("X Position: " + xposition);
             System.out.println("Y Position: " + yposition);
             System.out.println("In report with id " + id);
+            if (winnerFound == true)
+                System.out.println("THREAD " + winningID + " HAS ALREADY WON!!");
+            System.out.println(numFinished + " THREADS HAVE FINISHED.");
             this.revalidate();
             this.repaint();
+        }
+
+        public synchronized void declareFinish(int id)
+        {
+            if (finishedThreads[id] == 0)
+            {
+                if (numFinished == 0)
+                {
+                    winnerFound = true;
+                    winningID = id;
+                }
+                finishedThreads[id] = 1;
+                numFinished++;
+            }
+            if (numFinished == 4)
+                phase2 = true;
+        }
+
+        public boolean onPhase2()
+        {
+            return phase2;
+        }
+
+        public int getWinnerID()
+        {
+            return winningID;
         }
     }
 
@@ -130,12 +245,16 @@ public class Project2 extends JPanel{
         private Grid grd;
         private int score;
         private int[][] visitedSquares = new int[GRIDSIZE][GRIDSIZE];
-        private boolean done;
+        private boolean done; // indicates whether phase 1 is done for thread
+        private boolean phase1done; //indicates whether ALL threads have finished phase 1
+        private boolean done2; // indicates whether phase 2 is done
         private Walker[] opponents = new Walker[3];
         public Walker(int iden, Grid g){
             id = iden;
             grd = g;
             done = false;
+            phase1done = false;
+            done2 = false;
             score = 1;
             for (int i = 0; i < GRIDSIZE; i++)
             {
@@ -211,6 +330,11 @@ public class Project2 extends JPanel{
             while(!done)
             {
                 grd.report(id, xposition, yposition, visitedSquares[xposition][yposition]);
+                if (score == 100)
+                {
+                    grd.declareFinish(id);
+                    done = true;
+                }
                 visitedSquares[xposition][yposition] = 1;
                 this.randomMove();
                 if (visitedSquares[xposition][yposition] == 0)
@@ -223,7 +347,69 @@ public class Project2 extends JPanel{
                     System.out.println(e);
                 }
             }
+            
+            //After we are done, wait for phase 2 to start
+            while(!phase1done)
+            {
+                System.out.println("Thread " + id + " reports phase 1 not done");
+                phase1done = grd.onPhase2();
+                try{
+                    Thread.sleep(Math.round(500*Math.random()));
+                }
+                catch (InterruptedException e){
+                    System.out.println(e);
+                }
             }
+
+            //If thread won, do the same thing except by itself
+            if (grd.getWinnerID() == id)
+            { 
+                // Re-initialize
+                for (int i = 0; i < GRIDSIZE; i++)
+                {
+                    for (int j = 0; j < GRIDSIZE; j++)
+                    {
+                        visitedSquares[i][j] = 0;
+                    }
+                }
+                if (id == 0){
+                    xposition = 0;
+                    yposition = 0;
+                }
+                if (id == 1){
+                    xposition = 0;
+                    yposition = 9;
+                }
+                if (id == 2){
+                    xposition = 9;
+                    yposition = 0;
+                }
+                if (id == 3){
+                    xposition = 9;
+                    yposition = 9;
+                }
+                score = 1;
+                while(!done2)
+                {
+                    grd.report(id, xposition, yposition, visitedSquares[xposition][yposition]);
+                    if (score == 100)
+                    {
+                        done2 = true;
+                    }   
+                    visitedSquares[xposition][yposition] = 1;
+                    this.randomMove();
+                    if (visitedSquares[xposition][yposition] == 0)
+                        score++;
+                    System.out.println("Thread " + id + " has " + score + " visited squares.");
+                    try{
+                        Thread.sleep(Math.round(500*Math.random()));
+                    }
+                    catch (InterruptedException e){
+                        System.out.println(e);
+                    }
+                }
+            }
+           
         }
-    
+    }
 }
