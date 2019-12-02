@@ -12,10 +12,10 @@ public class Project2 extends JPanel{
         Walker walker2 = new Walker(2, grd);
         Walker walker3 = new Walker(3, grd);
 
-        walker0.setOpponents(walker1, walker2, walker3);
-        walker1.setOpponents(walker0, walker2, walker3);
-        walker2.setOpponents(walker1, walker0, walker3);
-        walker3.setOpponents(walker1, walker2, walker0);
+        //walker0.setOpponents(walker1, walker2, walker3);
+        //walker1.setOpponents(walker0, walker2, walker3);
+        //walker2.setOpponents(walker1, walker0, walker3);
+        //walker3.setOpponents(walker1, walker2, walker0);
 
         walker0.start();
         walker1.start();
@@ -86,7 +86,7 @@ public class Project2 extends JPanel{
             }
             else
             {
-                drawPhase2(g);;
+                drawPhase2(g);
             }
         }
  
