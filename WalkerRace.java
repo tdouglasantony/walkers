@@ -1,3 +1,10 @@
+//The WalkerRacer project
+//CSCI 310
+//Tyler Antony
+//Jacob Haapoja
+//Sunil Shrestha
+//CSCI 310, St. Cloud State University
+
 import java.awt.*;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
